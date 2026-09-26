@@ -183,6 +183,7 @@ checkout in a fresh `python:3.12-slim` container and in CI.
 | **Real-world benign PDFs** (281 files) | **97.9%** correctly clean | 96.8% |
 | Held-out synthetic (1,000 unseen files) | **100%** · ROC-AUC 1.000 | 88.8% |
 | Training cross-validation (5-fold F1) | 0.992 ± 0.006 | – |
+| **Real malware** | ⏳ **Not yet measured**: harness ready, [see below](#-real-malware-benchmark) | – |
 
 ¹ *"Flag it if it has JavaScript, an automatic trigger, or a launch action."* Reported side by side so it's clear what the model adds.
 
@@ -229,6 +230,27 @@ past scanners.
 Full reports: [`report.json`](pdfshield/model/report.json) (training) and
 [`evaluation.json`](pdfshield/model/evaluation.json) (held-out, stress and real-world, file by file).
 
+## 🦠 Real-malware benchmark
+
+**Status: not yet run.** Every number above comes from synthetic malware or benign-only real files, so
+PDFShield currently makes **no claim** about detecting real malware. Measuring that takes a labelled corpus of
+real malicious PDFs, such as [CIC-Evasive-PDFMal2022](https://www.unb.ca/cic/datasets/pdfmal-2022.html). The
+harness to measure it is built, tested, and runs in one command:
+
+```bash
+scripts/benchmark.sh  malicious.zip  benign.zip  results/  "CIC-Evasive-PDFMal2022"
+```
+
+- **Safe to run on live samples.** Archives are unpacked inside a container, into memory, with no network, a
+  read-only filesystem, no privileges, and capped memory. Samples are parsed, never rendered or executed.
+- **Hard to game.** Duplicates are removed by SHA-256, and files under both labels are dropped. Every parser hang
+  or crash is recorded and counted as flagged. Recall and false-positive rate come with 95% confidence intervals.
+- **Two separate answers.** *As shipped*: the bundled synthetic-trained model on files it never saw.
+  *Retrained*: 5-fold cross-validation on the real corpus.
+
+The rules, including *no tuning on the test corpus*, are fixed in advance in
+[`docs/REAL_MALWARE_BENCHMARK.md`](docs/REAL_MALWARE_BENCHMARK.md). The result goes in this section whatever it is.
+
 ### Bugs the evaluation caught
 
 Each of these was found by measuring, not by guessing. The full story is in [`docs/ENGINEERING_NOTES.md`](docs/ENGINEERING_NOTES.md).
@@ -267,10 +289,9 @@ pdfshield train --benign 2000 --malicious 2000 --seed 7
 
 ## ⚠️ Limitations
 
-- **No real malware in any test set.** Real-world accuracy measures false positives on benign files. Detection
-  rates on real malware are unmeasured until the model is evaluated on a labeled corpus such as
-  [Contagio](https://contagiodump.blogspot.com/) or [CIC-Evasive-PDFMal2022](https://www.unb.ca/cic/datasets/pdfmal-2022.html)
-  inside a sandbox.
+- **Real-malware detection is not yet measured.** Real-world accuracy so far measures false positives on benign
+  files only. The [benchmark harness](#-real-malware-benchmark) is ready; the result needs a labelled
+  real-malware corpus.
 - **Synthetic malware is only as varied as its generator.** The model has seen the obfuscation styles in
   `jsgen.py`. A novel style, or malicious code written to look like plain form code, may score low.
 - **Static analysis can't see runtime behavior.** Code assembled at runtime from form-field values or
@@ -286,7 +307,8 @@ pdfshield train --benign 2000 --malicious 2000 --seed 7
 - [x] Evaluation on real-world PDFs, with a simple-rule baseline
 - [x] Docker image that scans in a locked-down, network-less container
 - [x] Evaluation suite: held-out set, stress tests, rule baseline, real-world files
-- [ ] Retrain and benchmark on a public real-malware dataset
+- [x] Sandboxed real-malware benchmark harness (dedup, timeouts, confidence intervals, fixed protocol)
+- [ ] Run it on CIC-Evasive-PDFMal2022 and publish the result
 - [ ] Stream-level features: filter chains, entropy, suspicious fonts and images
 - [ ] De-obfuscate JavaScript statically (unwrap `unescape`/`fromCharCode` layers) before analysis
 - [ ] REST API for upload scanning
@@ -302,12 +324,15 @@ pdfshield/
 │   ├── samples.py      # benign / malicious PDF builders
 │   ├── train.py        # dataset generation, training, training report
 │   ├── evaluate.py     # held-out, stress-test and real-world evaluation
+│   ├── benchmark.py    # real-malware benchmark: isolation, dedup, confidence intervals
 │   ├── model.py        # scoring, inspection policy, explanations
 │   ├── cli.py          # `pdfshield` command
 │   └── model/          # trained model + report.json + evaluation.json
-├── tests/              # pytest suite (29 tests)
+├── scripts/benchmark.sh  # runs the benchmark in a locked-down container
+├── tests/              # pytest suite (33 tests)
 ├── docs/
 │   ├── ENGINEERING_NOTES.md
+│   ├── REAL_MALWARE_BENCHMARK.md
 │   └── demo.svg
 └── Dockerfile
 ```

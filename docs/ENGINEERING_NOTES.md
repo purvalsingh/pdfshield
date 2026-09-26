@@ -119,7 +119,7 @@ for error analysis. That's also why the README calls it a development set rather
 |---|---|
 | Detects the malware *techniques* it was trained on | ✅ 100% held-out, 99% on fresh malicious samples |
 | Low false-positive rate on real benign PDFs | ✅ 97.9% clean on 281 real files (development set, so somewhat optimistic) |
-| Detects real-world malware | ❓ Unmeasured. No live malware was used; that needs a sandboxed evaluation on a labeled corpus |
+| Detects real-world malware | ❓ Unmeasured. The sandboxed benchmark harness and a fixed protocol are ready ([REAL_MALWARE_BENCHMARK.md](REAL_MALWARE_BENCHMARK.md)); it needs a labelled real-malware corpus to run on |
 | Beats a simple rule | ✅ Once the benign class is realistic (100% vs 88.8% held-out, 97.9% vs 96.8% real-world) |
 
 ## Talking points in one paragraph
@@ -130,5 +130,6 @@ for error analysis. That's also why the README calls it a development set rather
 > distribution. The model matched a one-line rule until I made the benign class realistic, so I report that
 > baseline next to every number. Testing on 281 real PDFs found 13 false positives, each with a concrete
 > cause, and fixing them took it to 97.9%. I stopped tuning there so I wouldn't overfit to that corpus. The one
-> thing I can't claim is real-malware recall, because that needs a sandboxed evaluation I deliberately didn't
-> run here.
+> thing I can't claim yet is real-malware recall. I built a sandboxed benchmark with deduplication, parser-hang
+> isolation and confidence intervals, and wrote down the reporting rules before running it, so that when it
+> runs, the number can't be tuned after the fact.

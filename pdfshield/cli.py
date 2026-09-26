@@ -97,6 +97,12 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
     return run_evaluation(args)
 
 
+def cmd_benchmark(args: argparse.Namespace) -> int:
+    from .benchmark import main as run_benchmark
+
+    return run_benchmark(args)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="pdfshield",
@@ -133,6 +139,17 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--output", help="write the full JSON report here")
     p.add_argument("--model", default=str(DEFAULT_MODEL_PATH))
     p.set_defaults(func=cmd_evaluate)
+
+    p = sub.add_parser("benchmark", help="measure detection on a labelled corpus of real (malicious) PDFs")
+    p.add_argument("--malicious", nargs="+", required=True, metavar="DIR", help="folders of known-malicious files")
+    p.add_argument("--benign", nargs="+", required=True, metavar="DIR", help="folders of known-benign files")
+    p.add_argument("--name", default="real-world corpus", help="corpus name for the report")
+    p.add_argument("--output", default="benchmark-results", help="report folder (default: ./benchmark-results)")
+    p.add_argument("--timeout", type=float, default=30.0, help="seconds per file before it counts as a parser hang")
+    p.add_argument("--workers", type=int, help="parallel parser processes (default: CPUs - 1)")
+    p.add_argument("--cache", help="feature cache file, so reruns skip extraction")
+    p.add_argument("--model", default=str(DEFAULT_MODEL_PATH))
+    p.set_defaults(func=cmd_benchmark)
     return parser
 
 
