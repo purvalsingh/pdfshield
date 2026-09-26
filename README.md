@@ -38,6 +38,17 @@ pdfshield scan suspicious.pdf
 
 That's it. A trained model ships with the repo, so there's nothing else to download.
 
+### 🐳 Or run it in Docker (recommended for untrusted files)
+
+```bash
+docker build -t pdfshield .
+docker run --rm --network none --read-only --cap-drop ALL \
+  -v "$PWD/inbox:/scan:ro" pdfshield scan .
+```
+
+The container runs as an unprivileged user with no network and a read-only filesystem,
+and your PDFs are mounted read-only, so even a file built to attack the parser has nowhere to go.
+
 ## 📖 Usage
 
 ### Scan files or whole folders
@@ -108,6 +119,16 @@ for reason in verdict.reasons:
 pdfshield features invoice.pdf
 ```
 
+### Measure accuracy yourself
+
+```bash
+pdfshield evaluate                                   # held-out + stress tests
+pdfshield evaluate --real my_pdfs/ --output eval.json
+```
+
+`--real` scans your own folders. Files under a folder named `malicious/` count as malicious, and
+everything else counts as benign.
+
 ## ⚙️ How it works
 
 ```mermaid
@@ -139,25 +160,54 @@ flowchart LR
 
 ## 📊 Model performance
 
-Trained on 1,200 generated PDFs (600 benign, 600 malicious-structured) with a stratified 75/25 split:
+Every number below was reproduced in a fresh `python:3.12-slim` container, built from a clean
+checkout: install, 10/10 tests passing, retrain from scratch (identical feature importances, so training is reproducible), then evaluate.
+
+### 1. Training (1,200 files, stratified 75/25 split)
 
 | Metric | Result |
 |---|---|
 | 5-fold cross-validated F1 | 1.000 ± 0.000 |
-| Test precision / recall | 1.000 / 1.000 |
 | Test confusion matrix | 150 TN · 0 FP · 0 FN · 150 TP |
 
-**Top features:** `javascript_count` (0.39), `additional_actions` (0.24), `open_action` (0.23), `launch_action` (0.09), `embedded_file_count` (0.02).
+**Top features:** `javascript_count` (0.39), `open_action` (0.26), `additional_actions` (0.23), `launch_action` (0.08), `embedded_file_count` (0.03).
 
-The full report is in [`pdfshield/model/report.json`](pdfshield/model/report.json).
+### 2. Held-out set (1,000 freshly generated files, a seed never used in training)
 
-> **Read the perfect score with care.** The malicious class is *defined* by having an automatic trigger,
-> so clean separation is expected on this data. It shows the pipeline learns the right signals. It does
-> **not** mean 100% accuracy on real-world malware. See [Limitations](#%EF%B8%8F-limitations).
+| Accuracy | Precision | Recall | ROC-AUC | Confusion |
+|---|---|---|---|---|
+| **100%** | 1.000 | 1.000 | 1.000 | 500 TN · 0 FP · 0 FN · 500 TP |
+
+### 3. Stress tests (cases the model never saw in training)
+
+| Case | True label | What it tests | Accuracy |
+|---|---|---|---|
+| Obfuscated names | malicious | `/J#61vaScript`-style hex escapes | ✅ 50/50 |
+| Truncated file | malicious | Broken cross-reference table | ✅ 50/50 |
+| Object streams | malicious | Actions hidden in compressed object streams | ✅ 50/50 |
+| Large malicious | malicious | 40–80 pages, far outside training size range | ✅ 50/50 |
+| Click-triggered JS | malicious | JavaScript on a link click, no auto-trigger | ✅ 50/50 |
+| Truncated benign | benign | Broken files must not *look* malicious | ✅ 50/50 |
+| Large benign | benign | 40–80 pages | ✅ 50/50 |
+| Calculating form | benign | Legitimate field-level JavaScript | ❌ 0/1 (known false positive) |
+
+### 4. Real-world PDFs
+
+Two real benign PDFs found on the test machine (a 10-page design showcase and a LibreOffice-generated
+document) scored **3%** and **1%** risk. The LibreOffice file originally scored **61%**; see bug 3 below.
+
+Full reports: [`report.json`](pdfshield/model/report.json) (training) and
+[`evaluation.json`](pdfshield/model/evaluation.json) (held-out + stress).
+
+> **Read these scores with care.** The malicious class is *defined* by having an automatic trigger,
+> so clean separation is expected on this data. A one-line rule ("has JavaScript, an auto-trigger or a
+> launch action") scores exactly the same on every set above. That's reported alongside the model in
+> `pdfshield evaluate` on purpose. On data this clean the forest has only learned the rule. What it adds
+> shows up on noisy real-world corpora, where features trade off against each other. See [Limitations](#%EF%B8%8F-limitations).
 
 ### Bugs the evaluation caught
 
-Two data problems were found and fixed before this model was trusted:
+Three problems were found and fixed before this model was trusted:
 
 1. **File size was the top feature.** The first malicious samples were blank pages while benign ones held
    real text, so the model learned "small file = malware". Malicious samples now carry the same kind of
@@ -165,6 +215,10 @@ Two data problems were found and fixed before this model was trusted:
 2. **"Encrypted" and "has links" leaked the label.** Re-saving with pikepdf dropped encryption, and links
    nested inside annotations weren't counted. After fixing both, encryption, links, forms and attachments
    appear in *both* classes, so only the genuinely dangerous mechanisms separate them.
+3. **A real LibreOffice PDF was flagged at 61%.** Its `/OpenAction` was `[page 1 /XYZ …]`, which means
+   "open at page 1", not "run this". Word and LibreOffice write that constantly. Synthetic data could never
+   have exposed this; only a real file did. Now only *executable* open actions count, benign training data
+   includes navigation open actions, and the same file scores 1%.
 
 ## 🧪 The training data (and why no live malware)
 
@@ -192,6 +246,8 @@ Being upfront about what this can't do:
   same `/AA` + JavaScript mechanism as malware, and PDFShield flags it. This is a real, tested false positive
   (`test_known_false_positive_calculating_form`). The fix is on the roadmap: analyze *what* the script does,
   not just that it exists.
+- **On this data the model equals a simple rule.** See the note under Model performance. The ML pipeline
+  is built to be retrained on real data, where that stops being true.
 - **Synthetic training data.** Real-world PDFs are noisier. Before production use, retrain on a labeled corpus
   such as [Contagio](https://contagiodump.blogspot.com/) or [CIC-Evasive-PDFMal2022](https://www.unb.ca/cic/datasets/pdfmal-2022.html),
   handled inside a sandbox.
@@ -203,7 +259,9 @@ Being upfront about what this can't do:
 - [ ] Static analysis of JavaScript content (`eval`, `unescape`, heap-spray patterns, obfuscation entropy)
 - [ ] Stream-level features: filter chains, entropy, suspicious fonts and images
 - [ ] Retrain and benchmark on a public real-malware dataset
-- [ ] REST API and Docker image for upload scanning
+- [x] Docker image that scans in a locked-down, network-less container
+- [x] Evaluation suite: held-out set, stress tests, rule baseline, real-world files
+- [ ] REST API for upload scanning
 
 ## 🗂️ Project layout
 
@@ -212,11 +270,13 @@ pdfshield/
 ├── pdfshield/
 │   ├── features.py     # structural feature extraction (+ byte-scan fallback)
 │   ├── samples.py      # benign / malicious-structured PDF builders
-│   ├── train.py        # dataset generation, training, evaluation report
+│   ├── train.py        # dataset generation, training, training report
+│   ├── evaluate.py     # held-out, stress-test and real-world evaluation
 │   ├── model.py        # model loading, scoring, explanations
 │   ├── cli.py          # `pdfshield` command
-│   └── model/          # trained model + report.json
+│   └── model/          # trained model + report.json + evaluation.json
 ├── tests/              # pytest suite, including the known false positive
+├── Dockerfile
 └── docs/demo.svg
 ```
 

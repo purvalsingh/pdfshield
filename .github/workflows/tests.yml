@@ -19,3 +19,14 @@ jobs:
       - run: pytest -v
       - name: Smoke-test the CLI
         run: pdfshield --version && pdfshield scan --help
+      - name: Evaluate the bundled model (quick run)
+        run: pdfshield evaluate --n 100 --stress-n 10
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t pdfshield .
+      - name: Scan in a locked-down container
+        run: |
+          docker run --rm --network none --read-only --cap-drop ALL pdfshield --version

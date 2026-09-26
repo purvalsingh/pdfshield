@@ -1,0 +1,95 @@
+{
+  "seed": 20260926,
+  "threshold": 0.5,
+  "held_out": {
+    "n": 1000,
+    "model": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "roc_auc": 0.9999999999999999,
+      "confusion": {
+        "tn": 500,
+        "fp": 0,
+        "fn": 0,
+        "tp": 500
+      }
+    },
+    "rule_baseline": {
+      "accuracy": 1.0,
+      "confusion": {
+        "tn": 500,
+        "fp": 0,
+        "fn": 0,
+        "tp": 500
+      }
+    }
+  },
+  "stress": [
+    {
+      "case": "obfuscated names",
+      "true_label": "malicious",
+      "n": 50,
+      "model_accuracy": 1.0,
+      "rule_accuracy": 1.0,
+      "tests": "hex-escaped /J#61vaScript etc."
+    },
+    {
+      "case": "truncated file",
+      "true_label": "malicious",
+      "n": 50,
+      "model_accuracy": 1.0,
+      "rule_accuracy": 1.0,
+      "tests": "broken xref, parser recovery / fallback"
+    },
+    {
+      "case": "object streams",
+      "true_label": "malicious",
+      "n": 50,
+      "model_accuracy": 1.0,
+      "rule_accuracy": 1.0,
+      "tests": "actions inside compressed object streams"
+    },
+    {
+      "case": "large malicious",
+      "true_label": "malicious",
+      "n": 50,
+      "model_accuracy": 1.0,
+      "rule_accuracy": 1.0,
+      "tests": "40-80 pages, outside training size range"
+    },
+    {
+      "case": "click-triggered JS",
+      "true_label": "malicious",
+      "n": 50,
+      "model_accuracy": 1.0,
+      "rule_accuracy": 1.0,
+      "tests": "JS on a link click, no auto-trigger (out of distribution)"
+    },
+    {
+      "case": "truncated benign",
+      "true_label": "benign",
+      "n": 50,
+      "model_accuracy": 1.0,
+      "rule_accuracy": 1.0,
+      "tests": "broken benign files must not look malicious"
+    },
+    {
+      "case": "large benign",
+      "true_label": "benign",
+      "n": 50,
+      "model_accuracy": 1.0,
+      "rule_accuracy": 1.0,
+      "tests": "40-80 pages, outside training size range"
+    },
+    {
+      "case": "calculating form",
+      "true_label": "benign",
+      "n": 1,
+      "model_accuracy": 0.0,
+      "rule_accuracy": 0.0,
+      "tests": "legitimate field-level JavaScript (known false positive)"
+    }
+  ],
+  "real_world": []
+}
