@@ -5,8 +5,8 @@
     "malicious": 600
   },
   "cross_val_f1": {
-    "mean": 1.0,
-    "std": 0.0
+    "mean": 0.9922,
+    "std": 0.0056
   },
   "test": {
     "benign": {
@@ -52,17 +52,23 @@
     ]
   },
   "feature_importance": {
-    "javascript_count": 0.3909,
-    "open_action": 0.2553,
-    "additional_actions": 0.2246,
-    "launch_action": 0.0765,
-    "embedded_file_count": 0.0245,
-    "object_count": 0.0141,
-    "file_size_kb": 0.0094,
-    "uri_count": 0.002,
-    "page_count": 0.0019,
-    "encrypted": 0.0005,
-    "acroform": 0.0003,
-    "xfa": 0.0
+    "js_suspicious_calls": 0.1961,
+    "js_max_string_len": 0.1548,
+    "launch_action": 0.1093,
+    "open_action": 0.0946,
+    "js_length": 0.0891,
+    "additional_actions": 0.0873,
+    "js_entropy": 0.0744,
+    "javascript_count": 0.0737,
+    "js_encoded_ratio": 0.0633,
+    "file_size_kb": 0.0159,
+    "object_count": 0.0132,
+    "acroform": 0.0057,
+    "js_network_calls": 0.0057,
+    "embedded_file_count": 0.0053,
+    "xfa": 0.004,
+    "page_count": 0.0038,
+    "uri_count": 0.0023,
+    "encrypted": 0.0014
   }
 }

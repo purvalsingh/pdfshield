@@ -7,7 +7,7 @@
       "accuracy": 1.0,
       "precision": 1.0,
       "recall": 1.0,
-      "roc_auc": 0.9999999999999999,
+      "roc_auc": 1.0,
       "confusion": {
         "tn": 500,
         "fp": 0,
@@ -16,10 +16,10 @@
       }
     },
     "rule_baseline": {
-      "accuracy": 1.0,
+      "accuracy": 0.888,
       "confusion": {
-        "tn": 500,
-        "fp": 0,
+        "tn": 388,
+        "fp": 112,
         "fn": 0,
         "tp": 500
       }
@@ -38,8 +38,8 @@
       "case": "truncated file",
       "true_label": "malicious",
       "n": 50,
-      "model_accuracy": 1.0,
-      "rule_accuracy": 1.0,
+      "model_accuracy": 0.9,
+      "rule_accuracy": 0.94,
       "tests": "broken xref, parser recovery / fallback"
     },
     {
@@ -62,16 +62,40 @@
       "case": "click-triggered JS",
       "true_label": "malicious",
       "n": 50,
+      "model_accuracy": 0.96,
+      "rule_accuracy": 1.0,
+      "tests": "obfuscated JS on a link click, no auto-trigger"
+    },
+    {
+      "case": "remote GoToR",
+      "true_label": "malicious",
+      "n": 50,
       "model_accuracy": 1.0,
       "rule_accuracy": 1.0,
-      "tests": "JS on a link click, no auto-trigger (out of distribution)"
+      "tests": "opens \\\\host\\share on open: NTLM leak, never seen in training"
+    },
+    {
+      "case": "password malicious",
+      "true_label": "malicious",
+      "n": 50,
+      "model_accuracy": 0.82,
+      "rule_accuracy": 1.0,
+      "tests": "user password: contents unreadable"
+    },
+    {
+      "case": "password benign",
+      "true_label": "benign",
+      "n": 50,
+      "model_accuracy": 0.78,
+      "rule_accuracy": 0.72,
+      "tests": "user password: contents unreadable"
     },
     {
       "case": "truncated benign",
       "true_label": "benign",
       "n": 50,
       "model_accuracy": 1.0,
-      "rule_accuracy": 1.0,
+      "rule_accuracy": 0.84,
       "tests": "broken benign files must not look malicious"
     },
     {
@@ -86,10 +110,2260 @@
       "case": "calculating form",
       "true_label": "benign",
       "n": 1,
-      "model_accuracy": 0.0,
+      "model_accuracy": 1.0,
       "rule_accuracy": 0.0,
-      "tests": "legitimate field-level JavaScript (known false positive)"
+      "tests": "legitimate field-level JavaScript (was a false positive)"
     }
   ],
-  "real_world": []
+  "real_world": [
+    {
+      "file": "pikepdf/1biticc.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0136,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/378014596.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0241,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": true
+    },
+    {
+      "file": "pikepdf/aquamarine-cie.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0185,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/ccitt-endofline-true.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0413,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/cmyk-jpeg.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0185,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/congress-gray.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0413,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/congress.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0413,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/content-stream-errors.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0388,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/ctm_cm.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0131,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/cyclic-toc.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0464,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/form.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0402,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/form_210966.pdf",
+      "true_label": "benign",
+      "risk_score": 0.5235,
+      "correct": false,
+      "rule_correct": false,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/form_dd0293.pdf",
+      "true_label": "benign",
+      "risk_score": 0.5435,
+      "correct": false,
+      "rule_correct": false,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/formxobject.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0248,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/fourpages.pdf",
+      "true_label": "benign",
+      "risk_score": 0.032,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/graph-encrypted.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0538,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": true
+    },
+    {
+      "file": "pikepdf/graph.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0413,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/image-mono-inline.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0185,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/invalid_creationdate.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0185,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/jbig2.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0463,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/jbig2global.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0438,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/multiline_diffmap_font.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0228,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/newline-buffer-test.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0249,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/outlines.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0266,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/pal-1bit-rgb.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0185,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/pal-1bit-trivial.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0185,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/pal.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0097,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/pdfx.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0538,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/pike-flate-jp2.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0244,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/pike-jp2.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0244,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/pink-palette-icc.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0097,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/rle.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0142,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/sandwich.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0444,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/small.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0185,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": true
+    },
+    {
+      "file": "pikepdf/veraPDF test suite 6-2-10-t02-pass-a.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0312,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pikepdf/veraPDF test suite 6-2-3-3-t01-fail-c.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0268,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/001003ED.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0499,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/1.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0442,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/2.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0339,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/2201.00069.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0582,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/4.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0442,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/battery-file-22.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/bug1945.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0339,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/bug1971.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0185,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/chinese-tables.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0444,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/circular-toc.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0499,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/cms-etc-filled.pdf",
+      "true_label": "benign",
+      "risk_score": 0.513,
+      "correct": false,
+      "rule_correct": false,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/cython.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0262,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/dotted-gridlines.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0444,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/github_sample.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0285,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/has-bad-fonts.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/image-file1.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0413,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/img-regular.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0463,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/img-transparent.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0464,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/interfield-calculation.pdf",
+      "true_label": "benign",
+      "risk_score": 0.1008,
+      "correct": true,
+      "rule_correct": false,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/joined.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0244,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/merge-form1.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0244,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/merge-form2.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0241,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/mupdf_explored.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0339,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/quad-calc-0.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0451,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/small-table.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0292,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/strict-yes-no.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0274,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/symbol-list.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0135,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test-2333.pdf",
+      "true_label": "benign",
+      "risk_score": 0.5438,
+      "correct": false,
+      "rule_correct": false,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test-2462.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test-2812.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0164,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test-3143.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0138,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test-3150.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0139,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test-3207.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0464,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test-3591.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0493,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test-3820.pdf",
+      "true_label": "benign",
+      "risk_score": 0.026,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test-4055.pdf",
+      "true_label": "benign",
+      "risk_score": 0.5188,
+      "correct": false,
+      "rule_correct": false,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test-4503.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0454,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test-707448.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test-707673.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test-E+A.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0438,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test-linebreaks.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0368,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test-rewrite-images.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0413,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test-styled-table.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test2093.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0499,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test2182.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0298,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test2238.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0185,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_1645_expected-after-1.27.0.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0253,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_1645_expected.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0273,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_1824.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0464,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2108.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0505,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2270.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0452,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2548.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0262,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2553-2.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0494,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2553.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2596.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2634.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0243,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2635.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0378,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2645_1.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0359,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2645_2.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0307,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2645_3.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0307,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2710.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0438,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2730.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0215,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2742.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0294,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2788.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0545,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2791_content.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0382,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2791_coverpage.pdf",
+      "true_label": "benign",
+      "risk_score": 0.038,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2861.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0514,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2871.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0339,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2885.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2904.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0382,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2907.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0538,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2954.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2957_1.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2957_2.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0185,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2969.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0159,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_2979.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0378,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3058.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0384,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3062.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3070.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0625,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3072.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0272,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3087.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0413,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3179.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0545,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3186.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0289,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3197.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0484,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3357.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0484,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3362.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3376.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0468,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3448.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3450.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3569.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0461,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3594.pdf",
+      "true_label": "benign",
+      "risk_score": 0.026,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3624.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0499,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3650.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0451,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3677.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0518,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3705.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0399,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3725.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0101,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3727.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0378,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3780.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0484,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3789.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0244,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3806.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3842.pdf",
+      "true_label": "benign",
+      "risk_score": 0.026,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3848.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0372,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3854.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0451,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3863.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0243,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3886.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0413,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3887.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0451,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3933.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0499,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3950.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0499,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_3994.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0518,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4004.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0144,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4017.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0468,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4026.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0339,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4034.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0288,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4043.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0542,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4047.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0518,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4079.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0458,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4079_after.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0499,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4079_after_1.25.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0499,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4090.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0282,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4114.pdf",
+      "true_label": "benign",
+      "risk_score": 0.027,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4125.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0451,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4139.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0443,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4141.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0085,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4147.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0494,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4179.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0454,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4180.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0378,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4182.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4224.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0443,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4245.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0339,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4263.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0451,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4363.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0582,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4388_BOZ1.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4388_BUL1.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4412.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0216,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4415.pdf",
+      "true_label": "benign",
+      "risk_score": 0.055,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4423.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0375,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4435.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0375,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4466.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4479.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4505.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0112,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4546.pdf",
+      "true_label": "benign",
+      "risk_score": 0.027,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4564.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0185,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4571.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0129,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4599.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0484,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4614.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0267,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4639.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0444,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4670.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0443,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4699.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4712_a.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0308,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4712_b.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0282,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4716.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0284,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4751.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0339,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4755.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0358,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4790.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0289,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4907.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0582,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4928.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0135,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4936.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0125,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4942.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0423,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4943.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0423,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4944.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0284,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_4965.pdf",
+      "true_label": "benign",
+      "risk_score": 0.5238,
+      "correct": false,
+      "rule_correct": false,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_5001.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_5044.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0662,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_5049.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0375,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_5054.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0185,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_annot_file_info.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0518,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_delete_image.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0465,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_natural.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0372,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_open2.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0289,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/test_toc_count.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0305,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/text-find-ligatures.pdf",
+      "true_label": "benign",
+      "risk_score": 0.028,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/type3font.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0149,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/v110-changes.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0372,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pymupdf/widgettest.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0144,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/AutoCad_Diagram.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0451,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/AutoCad_Simple.pdf",
+      "true_label": "benign",
+      "risk_score": 0.021,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/FormTestFromOo.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0499,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/GeoBase_NHNC1_Data_Model_UML_EN.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0399,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/SF424_page2.pdf",
+      "true_label": "benign",
+      "risk_score": 0.3161,
+      "correct": true,
+      "rule_correct": false,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/Sample_Td-matrix.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0185,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/Seige_of_Vicksburg_Sample_OCR-crazyones-merged.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0382,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/Seige_of_Vicksburg_Sample_OCR.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0382,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/attachment.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0474,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/box.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0129,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/bytes.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0496,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/commented-xmp.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0314,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/commented.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0371,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/crazyones-encrypted-256.pdf",
+      "true_label": "benign",
+      "risk_score": 0.024,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": true
+    },
+    {
+      "file": "pypdf/crazyones.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0281,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/encrypted-file.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0249,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": true
+    },
+    {
+      "file": "pypdf/encrypted_doc_no_id.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0165,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/example.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0499,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/fontsampler.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/form.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0473,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/form_acrobatReader.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0373,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/form_evince.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0473,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/git.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0438,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/hello-world.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0438,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/imagemagick-ASCII85Decode.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0209,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/imagemagick-CCITTFaxDecode.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0455,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/imagemagick-images.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0358,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/imagemagick-lzw.pdf",
+      "true_label": "benign",
+      "risk_score": 0.026,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/indirect-rotation.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0372,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/inkscape-abc.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0129,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/issue-297.pdf",
+      "true_label": "benign",
+      "risk_score": 0.1348,
+      "correct": true,
+      "rule_correct": false,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/issue-301.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0444,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/issue-3850-1bit-indexed-flate.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0132,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/issue-604.pdf",
+      "true_label": "benign",
+      "risk_score": 0.026,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/issue-914-xmp-data.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/jpeg.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0454,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/labeled-edges-center-image.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0454,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/libreoffice-form.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0499,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/libreoffice-writer-password.pdf",
+      "true_label": "benign",
+      "risk_score": 0.027,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": true
+    },
+    {
+      "file": "pypdf/metadata.pdf",
+      "true_label": "benign",
+      "risk_score": 0.028,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/missing_info.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0593,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/outline-without-title.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0372,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/outlines-with-invalid-destinations.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0372,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/pdflatex-forms.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0399,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/pdflatex-outline.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0372,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/r2-empty-password.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0281,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/r2-owner-password.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0281,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/r2-user-password.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0281,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": true
+    },
+    {
+      "file": "pypdf/r3-empty-password.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0281,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/r3-user-password.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0281,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": true
+    },
+    {
+      "file": "pypdf/r4-aes-user-password.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0315,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": true
+    },
+    {
+      "file": "pypdf/r4-aes-v2-no-key-length.pdf",
+      "true_label": "benign",
+      "risk_score": 0.027,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/r4-owner-password.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0281,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/r4-user-password.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0281,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": true
+    },
+    {
+      "file": "pypdf/r5-empty-password.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0315,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/r5-owner-password.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0315,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/r5-user-password.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0315,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/r6-both-passwords.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0315,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": true
+    },
+    {
+      "file": "pypdf/r6-empty-password.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0315,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/r6-owner-password.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0315,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/r6-user-password.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0315,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/reportlab-inline-image.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0185,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/selenium-pypdf-issue-177.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0538,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/side-by-side-subfig.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0438,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/test Orient.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0451,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/toy.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0185,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/two-different-pages.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0179,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/unencrypted.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0267,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "pypdf/visitor_text_position.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0185,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "libreoffice/claude/theme-showcase.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0289,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    },
+    {
+      "file": "libreoffice/claude/xpdfimport_err.pdf",
+      "true_label": "benign",
+      "risk_score": 0.0493,
+      "correct": true,
+      "rule_correct": true,
+      "parse_error": false
+    }
+  ],
+  "real_world_corpus": "281 unique benign PDFs: the test fixtures shipped in the pikepdf, PyMuPDF and pypdf source distributions on PyPI, plus 2 PDFs from the build machine. Used for error analysis while developing, so treat it as a development set."
 }

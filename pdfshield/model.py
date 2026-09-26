@@ -71,14 +71,48 @@ def explain(feats: PDFFeatures) -> list[str]:
         if name.endswith("_count") and value > 1:
             text += f" x{value}"
         reasons.append(text)
-    if feats.parse_error:
+    if feats.js_calls:
+        reasons.insert(0, "JavaScript uses " + ", ".join(feats.js_calls))
+    if feats.js_encoded_ratio >= 0.2:
+        reasons.insert(0, f"JavaScript is {feats.js_encoded_ratio:.0%} escape-encoded (obfuscation)")
+    if feats.js_max_string_len >= 1000 and feats.js_entropy >= 4.5:
+        reasons.append(f"JavaScript hides a {feats.js_max_string_len:,}-character dense string")
+    if feats.js_length and not (feats.js_suspicious_calls or feats.js_encoded_ratio >= 0.2):
+        reasons.append("JavaScript looks like ordinary form/viewer code (no exploit or obfuscation markers)")
+    if feats.password_protected:
+        reasons.append("Password-protected: contents cannot be inspected without the password")
+    elif feats.parse_error:
         reasons.append("File is malformed; features came from a raw byte scan")
     return reasons
+
+
+def uninspectable_autorun(feats: PDFFeatures) -> bool:
+    """Code runs automatically, but we cannot read it.
+
+    Password-protected files hide their scripts, and damaged or re-encrypted
+    files can leave only ciphertext behind. The model has nothing to judge the
+    script by, so policy decides: flag it for review rather than guess clean.
+    """
+    auto = feats.open_action or feats.additional_actions
+    has_code = feats.javascript_count or feats.launch_action
+    unreadable = feats.password_protected or (feats.javascript_count and (feats.js_length == 0 or feats.js_entropy >= 7.0))
+    return bool(auto and has_code and unreadable)
+
+
+def score_features(feats: PDFFeatures, model) -> tuple[float, bool]:
+    """Model probability, raised to the review threshold by policy when
+    auto-run code cannot be inspected. Returns (score, policy_applied)."""
+    score = float(model.predict_proba([feats.to_vector()])[0][1])
+    if uninspectable_autorun(feats) and score < SUSPICIOUS_AT:
+        return SUSPICIOUS_AT, True
+    return score, False
 
 
 def scan(path: str | os.PathLike, model_path: str | os.PathLike = DEFAULT_MODEL_PATH) -> Verdict:
     feats = extract_features(path)
     model = load_model(str(model_path))
-    score = float(model.predict_proba([feats.to_vector()])[0][1])
-    return Verdict(path=os.fspath(path), score=score, label=label_for(score),
-                   features=feats, reasons=explain(feats))
+    score, policy = score_features(feats, model)
+    reasons = explain(feats)
+    if policy:
+        reasons.insert(0, "Runs code automatically that cannot be inspected (policy: flag for review)")
+    return Verdict(path=os.fspath(path), score=score, label=label_for(score), features=feats, reasons=reasons)

