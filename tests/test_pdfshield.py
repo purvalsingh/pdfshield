@@ -7,7 +7,8 @@ import pytest
 
 from pdfshield import FEATURE_NAMES, extract_features, scan
 from pdfshield.cli import main
-from pdfshield.samples import build_calculating_form, build_document, build_malicious
+from pdfshield.samples import (add_navigation_open_action, build_calculating_form, build_document,
+                               build_malicious)
 
 
 @pytest.fixture
@@ -36,6 +37,16 @@ def test_encrypted_document_is_detected(tmp_path, rng):
     assert f.encrypted == 1
 
 
+def test_navigation_open_action_is_not_auto_run(tmp_path, rng):
+    # Word/LibreOffice write /OpenAction [page /XYZ ...] = "open at page 1".
+    # Found as a false positive on a real LibreOffice-generated PDF.
+    for _ in range(4):
+        data = add_navigation_open_action(build_document(rng), rng)
+        v = scan(write(tmp_path, "nav.pdf", data))
+        assert v.features.open_action == 0
+        assert v.label == "CLEAN"
+
+
 def test_injected_markers_are_extracted(tmp_path, rng):
     f = extract_features(write(tmp_path, "bad.pdf", build_malicious(rng)))
     assert f.open_action or f.additional_actions
@@ -58,6 +69,9 @@ def test_malformed_file_falls_back_to_byte_scan(tmp_path):
     f = extract_features(write(tmp_path, "junk.pdf", b"garbage /OpenAction /J#53 << /S /Launch >>"))
     assert f.parse_error
     assert f.open_action == 1 and f.launch_action == 1 and f.javascript_count == 1
+
+    f = extract_features(write(tmp_path, "junk2.pdf", b"garbage /OpenAction [3 0 R /Fit]"))
+    assert f.parse_error and f.open_action == 0
 
 
 def test_benign_documents_are_clean(tmp_path, rng):

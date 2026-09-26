@@ -117,6 +117,20 @@ def _scan_objects(pdf: pikepdf.Pdf, feats: PDFFeatures) -> None:
             feats.embedded_file_count += 1
 
 
+# Actions that only move the view. Word, LibreOffice and many generators write
+# an /OpenAction like [page /XYZ null null 0] ("open at page 1"); counting that
+# as an auto-run action flags ordinary office documents.
+_NAVIGATION_ACTIONS = {"/GoTo"}
+
+
+def _is_executable_open_action(action) -> bool:
+    if action is None or isinstance(action, pikepdf.Array):  # explicit destination
+        return False
+    if isinstance(action, pikepdf.Dictionary):
+        return _name(action.get("/S")) not in _NAVIGATION_ACTIONS
+    return False  # named destination (string/name)
+
+
 def _extract_structured(path: str, feats: PDFFeatures) -> None:
     # pikepdf normalises obfuscated names such as /J#61vaScript -> /JavaScript,
     # which a naive byte search would miss.
@@ -126,7 +140,7 @@ def _extract_structured(path: str, feats: PDFFeatures) -> None:
         feats.object_count = len(pdf.objects)
 
         root = pdf.Root
-        feats.open_action = int("/OpenAction" in root)
+        feats.open_action = int(_is_executable_open_action(root.get("/OpenAction")))
         if "/AA" in root:
             feats.additional_actions += 1
         if "/AcroForm" in root:
@@ -140,7 +154,8 @@ def _extract_structured(path: str, feats: PDFFeatures) -> None:
 # decoded before matching so trivial obfuscation does not hide keywords.
 _FALLBACK_PATTERNS = {
     "javascript_count": rb"/JavaScript\b|/JS\b",
-    "open_action": rb"/OpenAction\b",
+    # An inline array is a "go to page" destination, not an action.
+    "open_action": rb"/OpenAction\b(?!\s*\[)",
     "additional_actions": rb"/AA\b",
     "launch_action": rb"/Launch\b",
     "embedded_file_count": rb"/EmbeddedFile\b",

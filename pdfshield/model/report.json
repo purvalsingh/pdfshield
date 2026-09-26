@@ -52,17 +52,17 @@
     ]
   },
   "feature_importance": {
-    "javascript_count": 0.3867,
-    "additional_actions": 0.2382,
-    "open_action": 0.227,
-    "launch_action": 0.0876,
-    "embedded_file_count": 0.0247,
-    "object_count": 0.02,
-    "file_size_kb": 0.0099,
-    "page_count": 0.0022,
-    "uri_count": 0.0016,
-    "encrypted": 0.0015,
-    "acroform": 0.0006,
+    "javascript_count": 0.3909,
+    "open_action": 0.2553,
+    "additional_actions": 0.2246,
+    "launch_action": 0.0765,
+    "embedded_file_count": 0.0245,
+    "object_count": 0.0141,
+    "file_size_kb": 0.0094,
+    "uri_count": 0.002,
+    "page_count": 0.0019,
+    "encrypted": 0.0005,
+    "acroform": 0.0003,
     "xfa": 0.0
   }
 }

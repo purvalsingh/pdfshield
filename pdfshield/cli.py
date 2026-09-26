@@ -91,6 +91,12 @@ def cmd_train(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_evaluate(args: argparse.Namespace) -> int:
+    from .evaluate import main as run_evaluation
+
+    return run_evaluation(args)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="pdfshield",
@@ -118,6 +124,15 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--model", default=str(DEFAULT_MODEL_PATH))
     p.set_defaults(func=cmd_train)
+
+    p = sub.add_parser("evaluate", help="measure accuracy on unseen, stress-test and real-world PDFs")
+    p.add_argument("--n", type=int, default=500, help="held-out samples per class (default: 500)")
+    p.add_argument("--stress-n", type=int, default=50, help="samples per stress case (default: 50)")
+    p.add_argument("--real", nargs="*", metavar="DIR",
+                   help="folders of real PDFs; files under a 'malicious' folder are labelled malicious")
+    p.add_argument("--output", help="write the full JSON report here")
+    p.add_argument("--model", default=str(DEFAULT_MODEL_PATH))
+    p.set_defaults(func=cmd_evaluate)
     return parser
 
 

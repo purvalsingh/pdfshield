@@ -164,8 +164,25 @@ def inject_markers(pdf_bytes: bytes, rng: random.Random) -> bytes:
         return _save(pdf)
 
 
+def add_navigation_open_action(pdf_bytes: bytes, rng: random.Random) -> bytes:
+    """Open-at-page /OpenAction, as written by Word, LibreOffice and others.
+
+    It only moves the view, but it shares the /OpenAction key with auto-run
+    attacks, so the benign class needs it too.
+    """
+    with pikepdf.open(io.BytesIO(pdf_bytes)) as pdf:
+        page = pdf.pages[0].obj
+        if rng.random() < 0.5:
+            pdf.Root.OpenAction = pikepdf.Array([page, pikepdf.Name.XYZ, None, None, 0])
+        else:
+            pdf.Root.OpenAction = pikepdf.Dictionary(S=pikepdf.Name.GoTo, D=pikepdf.Array([page, pikepdf.Name.Fit]))
+        return _save(pdf)
+
+
 def build_benign(rng: random.Random) -> bytes:
     data = build_document(rng)
+    if rng.random() < 0.3:
+        data = add_navigation_open_action(data, rng)
     if rng.random() < 0.08:
         # Legitimate attachments exist too (spreadsheets, source data...).
         name = rng.choice(["data.csv", "appendix.txt", "figures.xlsx"])
