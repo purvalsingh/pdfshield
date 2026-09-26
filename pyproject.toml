@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pdfshield"
+version = "1.0.0"
+description = "Detect malicious PDFs from their structure with a trained machine-learning model"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Purval Singh" }]
+requires-python = ">=3.10"
+dependencies = [
+    "pikepdf>=8.0",
+    "scikit-learn>=1.3",
+    "joblib>=1.3",
+    "numpy>=1.24",
+    "reportlab>=4.0",
+]
+keywords = ["pdf", "malware", "security", "machine-learning", "static-analysis"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Security",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+pdfshield = "pdfshield.cli:main"
+
+[project.urls]
+Repository = "https://github.com/purvalsingh/pdfshield"
+
+[tool.setuptools]
+packages = ["pdfshield"]
+
+[tool.setuptools.package-data]
+pdfshield = ["model/*.joblib", "model/*.json"]

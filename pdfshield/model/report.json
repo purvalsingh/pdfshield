@@ -1,0 +1,68 @@
+{
+  "samples": {
+    "total": 1200,
+    "benign": 600,
+    "malicious": 600
+  },
+  "cross_val_f1": {
+    "mean": 1.0,
+    "std": 0.0
+  },
+  "test": {
+    "benign": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 150.0
+    },
+    "malicious": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 150.0
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 300.0
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 300.0
+    }
+  },
+  "confusion_matrix": {
+    "labels": [
+      "benign",
+      "malicious"
+    ],
+    "matrix": [
+      [
+        150,
+        0
+      ],
+      [
+        0,
+        150
+      ]
+    ]
+  },
+  "feature_importance": {
+    "javascript_count": 0.3867,
+    "additional_actions": 0.2382,
+    "open_action": 0.227,
+    "launch_action": 0.0876,
+    "embedded_file_count": 0.0247,
+    "object_count": 0.02,
+    "file_size_kb": 0.0099,
+    "page_count": 0.0022,
+    "uri_count": 0.0016,
+    "encrypted": 0.0015,
+    "acroform": 0.0006,
+    "xfa": 0.0
+  }
+}

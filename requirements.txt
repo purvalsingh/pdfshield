@@ -1,0 +1,5 @@
+pikepdf>=8.0
+scikit-learn>=1.3
+joblib>=1.3
+numpy>=1.24
+reportlab>=4.0
