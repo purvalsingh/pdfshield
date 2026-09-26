@@ -11,7 +11,7 @@ and **why**. It never renders or executes the file.
 [![tests](https://github.com/purvalsingh/pdfshield/actions/workflows/tests.yml/badge.svg)](https://github.com/purvalsingh/pdfshield/actions/workflows/tests.yml)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![Model](https://img.shields.io/badge/model-Random%20Forest-orange)
-![Real--world](https://img.shields.io/badge/real--world%20benign-97.9%25-brightgreen)
+![Real malware](https://img.shields.io/badge/real%20malware%20recall-76.2%25%20%40%201.3%25%20FPR-yellow)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 <img src="docs/demo.svg" alt="PDFShield scanning a folder of PDFs" width="720">
@@ -22,7 +22,7 @@ and **why**. It never renders or executes the file.
 
 ## ✨ Why PDFShield?
 
-- **🧠 A real trained model, not an LLM wrapper.** A scikit-learn Random Forest over 17 features, evaluated on held-out data, stress tests and **281 real-world PDFs**.
+- **🧠 A real trained model, not an LLM wrapper.** A scikit-learn Random Forest over 17 features, tested on **22,182 real PDFs including 13,089 real malware samples** (76.2% detected at 1.3% false positives, never having seen real malware in training).
 - **📜 Reads the JavaScript, not just its presence.** A form that calculates a total and a dropper that runs `eval(unescape("%u…"))` both "have JavaScript". PDFShield tells them apart.
 - **🔍 Explains every verdict.** *"JavaScript uses eval, unescape"*, *"Can launch an external program"*, or *"looks like ordinary form code"*.
 - **🔒 Safe by design.** Static analysis only. Nothing is rendered or executed, and the Docker image runs with no network, a read-only filesystem and no privileges.
@@ -183,7 +183,7 @@ checkout in a fresh `python:3.12-slim` container and in CI.
 | **Real-world benign PDFs** (281 files) | **97.9%** correctly clean | 96.8% |
 | Held-out synthetic (1,000 unseen files) | **100%** · ROC-AUC 1.000 | 88.8% |
 | Training cross-validation (5-fold F1) | 0.992 ± 0.006 | – |
-| **Real malware** | ⏳ **Not yet measured**: harness ready, [see below](#-real-malware-benchmark) | – |
+| **Real malware** (CIC-Evasive-PDFMal2022, 22,182 files) | **76.2%** detected at **1.3%** false positives · ROC-AUC 0.963 · [details](#-real-malware-benchmark) | – |
 
 ¹ *"Flag it if it has JavaScript, an automatic trigger, or a launch action."* Reported side by side so it's clear what the model adds.
 
@@ -232,66 +232,69 @@ Full reports: [`report.json`](pdfshield/model/report.json) (training) and
 
 ## 🦠 Real-malware benchmark
 
-**Status: not yet run.** Every number above comes from synthetic malware or benign-only real files, so
-PDFShield currently makes **no claim** about detecting real malware. Measuring that takes a labelled corpus of
-real malicious PDFs, such as [CIC-Evasive-PDFMal2022](https://www.unb.ca/cic/datasets/pdfmal-2022.html). The
-harness to measure it is built, tested, and runs in one command:
+**Dataset:** [CIC-Evasive-PDFMal2022](https://www.unb.ca/cic/datasets/pdfmal-2022.html) (Canadian Institute for
+Cybersecurity), downloaded 26 Sep 2026. After SHA-256 deduplication: **13,089 unique malicious + 9,093 unique benign
+PDFs.** Run in a disposable, memory-only sandbox with no network (see [how it was run](docs/REAL_MALWARE_BENCHMARK.md#how-this-run-was-done)).
 
-```bash
-scripts/benchmark.sh  malicious.zip  benign.zip  results/  "CIC-Evasive-PDFMal2022"
-```
+### As shipped: the headline number
 
-- **Safe to run on live samples.** Archives are unpacked inside a container, into memory, with no network, a
-  read-only filesystem, no privileges, and capped memory. Samples are parsed, never rendered or executed.
-- **Hard to game.** Duplicates are removed by SHA-256, and files under both labels are dropped. Every parser hang
-  or crash is recorded and counted as flagged. Recall and false-positive rate come with 95% confidence intervals.
-- **Two separate answers.** *As shipped*: the bundled synthetic-trained model on files it never saw.
-  *Retrained*: 5-fold cross-validation on the real corpus.
+The bundled model, trained **only on synthetic data**, had never seen a single real malicious PDF:
 
-The rules, including *no tuning on the test corpus*, are fixed in advance in
-[`docs/REAL_MALWARE_BENCHMARK.md`](docs/REAL_MALWARE_BENCHMARK.md). The result goes in this section whatever it is.
+| Metric | Result |
+|---|---|
+| **Detection rate (recall)** | **76.2%** (9,973 / 13,089 · 95% CI 75.5–76.9%) |
+| **False-positive rate** | **1.3%** (120 / 9,093 · 95% CI 1.1–1.6%) |
+| Precision | 98.8% |
+| ROC-AUC | 0.963 |
 
-### Bugs the evaluation caught
+Of the malicious files, 8,460 were rated MALICIOUS, 1,511 SUSPICIOUS, and 3,116 missed. Two files crashed the parser
+and are counted as flagged; none timed out.
 
-Each of these was found by measuring, not by guessing. The full story is in [`docs/ENGINEERING_NOTES.md`](docs/ENGINEERING_NOTES.md).
+| Threshold | Recall | False-positive rate |
+|---|---|---|
+| 0.3 | 79.4% | 3.1% |
+| **0.5 (default)** | **76.2%** | **1.3%** |
+| 0.6 | 69.4% | 0.11% |
+| 0.8 (MALICIOUS) | 64.7% | 0.03% |
 
-1. **"Small file = malware."** Early malicious samples were blank pages, and the model learned file size.
-2. **Encryption and links leaked the label.** pikepdf dropped encryption on re-save, and nested link actions weren't counted.
-3. **"Open at page 1" counted as auto-run.** A real LibreOffice PDF scored 61% and now scores 1%.
-4. **"Exactly one `/AA` = malware."** Synthetic forms always had exactly 2 scripted fields, so the model counted dictionaries instead of reading code.
-5. **Real-world misses showed where the rules were too blunt:** legitimate `launchURL` in Adobe's own scripts, `/Launch` to other PDFs, relative `GoToR` links, and page-tree loops that made the parser give up on whole files.
+### Retrained on the real data (5-fold cross-validation)
 
-## 🧪 The training data (and why no live malware)
+The same features and model, trained on CIC data (train and test folds never share a file):
 
-The training corpus is **synthetic but structurally real**, 600 benign and 600 malicious files:
+| Features | Recall | False-positive rate |
+|---|---|---|
+| All 17 | **96.3% ± 0.5%** | 0.19% ± 0.11% |
+| Without file size / object / page count | 95.0% ± 0.6% | 3.55% ± 0.27% |
 
-- **Benign** PDFs (reportlab): 1–12 pages of text, links, forms with 1–6 fields, attachments and encryption.
-  A quarter of them carry **realistic JavaScript**: Acrobat form helpers (`AFNumber_Format`,
-  `AFSimple_Calculate`), custom calculations and validation, print or zoom on open, document-level helper
-  functions, viewer-upgrade prompts, and even legitimate `eval`.
-- **Malicious** PDFs start as the same kind of document. Then real malware *techniques* are added:
-  `/OpenAction`, page `/AA` or document-level triggers, JavaScript wrapped in the obfuscation layers real
-  droppers use (escape encoding + `unescape`, `fromCharCode` chains, reversed strings, hex decoders, string
-  timers, packed blobs), `/Launch` of `cmd.exe`/`powershell`, dropped attachments opened with
-  `exportDataObject`, and remote `GoToR` credential leaks.
+The second row is there because CIC's malicious files are much smaller than its benign ones (median 9.5 KB vs
+74 KB), and the retrained model uses file size as its top feature. That size gap is a property of the dataset, not
+of malware, so the size-free row is the more honest estimate of the features' power: **95% recall at ~3.5% false
+positives.**
 
-Everything is **inert**. The obfuscated code only sets a variable, opens a URL on the reserved `.invalid`
-domain, or asks the viewer to open a placeholder text attachment. There is **no exploit code in this repository**,
-and the vulnerable Acrobat APIs are detected but never called. Handling live malware safely needs an isolated
-lab, so this project learns from technique and structure instead.
+### What it misses, and why
 
-Regenerate the data and retrain in about 20 seconds:
+| Missed malicious files (3,116) | Share | Cause |
+|---|---|---|
+| Embedded files / XFA forms, no JavaScript found | 38% | **XFA forms keep their JavaScript in XML `<script>` blocks**, which the extractor doesn't read yet. 41% of all misses are XFA |
+| No scripts, actions or attachments at all | 25% | Exploits in fonts, images or other streams, outside what these features can see |
+| JavaScript + auto-trigger, but content scored benign | 21% | Obfuscation styles the synthetic generator never produced |
+| JavaScript without an auto-trigger | 16% | Synthetic training malware always auto-ran |
 
-```bash
-pdfshield train                          # 600 + 600 samples, seed 42
-pdfshield train --benign 2000 --malicious 2000 --seed 7
-```
+The 120 false positives are mostly Adobe XFA/LiveCycle forms (70% XFA, 72% with embedded files): the same pattern
+found in the benign-only real-world test.
+
+Per the [protocol](docs/REAL_MALWARE_BENCHMARK.md), no feature, threshold or training data was changed after
+seeing these results. Fixes (XFA script extraction first) will be measured on a **different** corpus.
+Full reports: [`docs/results/cic-evasive-pdfmal2022/`](docs/results/cic-evasive-pdfmal2022/).
+
+**Reproduce it:** `scripts/benchmark.sh malicious.zip benign.zip results/ "CIC-Evasive-PDFMal2022"`
 
 ## ⚠️ Limitations
 
-- **Real-malware detection is not yet measured.** Real-world accuracy so far measures false positives on benign
-  files only. The [benchmark harness](#-real-malware-benchmark) is ready; the result needs a labelled
-  real-malware corpus.
+- **Misses about 1 in 4 real malicious PDFs (as shipped).** Mainly XFA-based samples (script hidden in XFA XML,
+  not yet extracted) and exploits with no scripting at all. See the [real-malware benchmark](#-real-malware-benchmark).
+- **One corpus.** The real-malware numbers are for CIC-Evasive-PDFMal2022. Detection rates don't automatically
+  transfer to other malware collections.
 - **Synthetic malware is only as varied as its generator.** The model has seen the obfuscation styles in
   `jsgen.py`. A novel style, or malicious code written to look like plain form code, may score low.
 - **Static analysis can't see runtime behavior.** Code assembled at runtime from form-field values or
@@ -308,7 +311,8 @@ pdfshield train --benign 2000 --malicious 2000 --seed 7
 - [x] Docker image that scans in a locked-down, network-less container
 - [x] Evaluation suite: held-out set, stress tests, rule baseline, real-world files
 - [x] Sandboxed real-malware benchmark harness (dedup, timeouts, confidence intervals, fixed protocol)
-- [ ] Run it on CIC-Evasive-PDFMal2022 and publish the result
+- [x] Run it on CIC-Evasive-PDFMal2022 and publish the result (76.2% recall at 1.3% FPR, as shipped)
+- [ ] Extract JavaScript from XFA `<script>` blocks (the largest cause of misses), then measure on a different corpus
 - [ ] Stream-level features: filter chains, entropy, suspicious fonts and images
 - [ ] De-obfuscate JavaScript statically (unwrap `unescape`/`fromCharCode` layers) before analysis
 - [ ] REST API for upload scanning

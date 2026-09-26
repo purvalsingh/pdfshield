@@ -111,6 +111,29 @@ for error analysis. That's also why the README calls it a development set rather
   locked forms (benign: 78% correct). Attackers do password-protect PDFs to get past scanners, so this
   is the right trade-off for a security tool.
 
+## 8. The real-malware benchmark
+
+After building the harness and committing the reporting rules, I ran it on **CIC-Evasive-PDFMal2022**:
+13,089 unique malicious and 9,093 unique benign PDFs, in a memory-only, network-less sandbox.
+
+**Result, as shipped:** 76.2% recall (95% CI 75.5–76.9%) at 1.3% false positives, ROC-AUC 0.963. That's a model
+that had never seen a real malicious PDF. Retrained on the real data it reaches 96.3% recall, or 95.0% without
+size features.
+
+**What the misses taught me:**
+- **The biggest blind spot is XFA.** 41% of missed malware uses XFA forms, whose JavaScript lives in XML
+  `<script>` elements rather than `/JS` entries. My synthetic data never did this, so neither the features nor
+  the generator looked there. It's the same lesson as bug 3: real data finds what synthetic data can't.
+- **25% of misses have no scripts or actions at all.** These are exploits in fonts, images or streams. That was
+  already a documented limitation; now it has a number.
+- **The dataset has its own artifact.** Malicious files are ~8x smaller than benign ones, and the retrained model
+  immediately used file size as its top feature, the same trap as bug 1, this time in a public dataset. Dropping
+  the size features costs little recall (96.3 → 95.0%) but raises false positives from 0.19% to 3.55%, so most of
+  the size signal was dataset bias.
+
+**What I didn't do:** change anything in response. The protocol forbids tuning on the test corpus, so the
+76.2% stands as published, and the XFA fix will be measured on a different corpus.
+
 ---
 
 ## Honest status
@@ -118,8 +141,9 @@ for error analysis. That's also why the README calls it a development set rather
 | Claim | Status |
 |---|---|
 | Detects the malware *techniques* it was trained on | ✅ 100% held-out, 99% on fresh malicious samples |
+| Detects real malware | ✅ **76.2%** (95% CI 75.5–76.9%) at 1.3% FPR on CIC-Evasive-PDFMal2022, trained only on synthetic data |
 | Low false-positive rate on real benign PDFs | ✅ 97.9% clean on 281 real files (development set, so somewhat optimistic) |
-| Detects real-world malware | ❓ Unmeasured. The sandboxed benchmark harness and a fixed protocol are ready ([REAL_MALWARE_BENCHMARK.md](REAL_MALWARE_BENCHMARK.md)); it needs a labelled real-malware corpus to run on |
+| Detects real malware from *other* corpora | ❓ Unmeasured. Numbers are for one dataset |
 | Beats a simple rule | ✅ Once the benign class is realistic (100% vs 88.8% held-out, 97.9% vs 96.8% real-world) |
 
 ## Talking points in one paragraph
@@ -129,7 +153,8 @@ for error analysis. That's also why the README calls it a development set rather
 > a fixed form-field count. Each leak showed up as an implausible feature importance or a skewed per-class
 > distribution. The model matched a one-line rule until I made the benign class realistic, so I report that
 > baseline next to every number. Testing on 281 real PDFs found 13 false positives, each with a concrete
-> cause, and fixing them took it to 97.9%. I stopped tuning there so I wouldn't overfit to that corpus. The one
-> thing I can't claim yet is real-malware recall. I built a sandboxed benchmark with deduplication, parser-hang
-> isolation and confidence intervals, and wrote down the reporting rules before running it, so that when it
-> runs, the number can't be tuned after the fact.
+> cause, and fixing them took it to 97.9%. I stopped tuning there so I wouldn't overfit to that corpus. Then I
+> wrote the reporting rules down *before* testing on real malware, and ran CIC-Evasive-PDFMal2022 (13,089 malicious,
+> 9,093 benign) in a memory-only sandbox with no network. Having never seen real malware, it caught 76.2% at a
+> 1.3% false-positive rate. Most misses are XFA forms, which hide their script somewhere my extractor doesn't look
+> yet. I published that number unchanged, and the fix gets measured on a different dataset.

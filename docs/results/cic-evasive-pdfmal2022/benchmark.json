@@ -1,0 +1,116 @@
+{
+  "name": "CIC-Evasive-PDFMal2022",
+  "corpus": {
+    "malicious": 13089,
+    "benign": 9093,
+    "duplicates": 30689,
+    "conflicting_labels": 0,
+    "timeouts": 0,
+    "errors": 2
+  },
+  "as_shipped": {
+    "recall": {
+      "value": 0.7619,
+      "ci95": [
+        0.7546,
+        0.7692
+      ],
+      "count": 9973,
+      "n": 13089
+    },
+    "false_positive_rate": {
+      "value": 0.0132,
+      "ci95": [
+        0.011,
+        0.0158
+      ],
+      "count": 120,
+      "n": 9093
+    },
+    "precision": 0.9881,
+    "accuracy": 0.8541,
+    "tp": 9973,
+    "fn": 3116,
+    "fp": 120,
+    "tn": 8973,
+    "roc_auc": 0.9632,
+    "thresholds": [
+      {
+        "threshold": 0.3,
+        "recall": 0.7943,
+        "false_positive_rate": 0.0307
+      },
+      {
+        "threshold": 0.4,
+        "recall": 0.7809,
+        "false_positive_rate": 0.0298
+      },
+      {
+        "threshold": 0.5,
+        "recall": 0.7619,
+        "false_positive_rate": 0.0132
+      },
+      {
+        "threshold": 0.6,
+        "recall": 0.6942,
+        "false_positive_rate": 0.0011
+      },
+      {
+        "threshold": 0.7,
+        "recall": 0.6713,
+        "false_positive_rate": 0.0003
+      },
+      {
+        "threshold": 0.8,
+        "recall": 0.6465,
+        "false_positive_rate": 0.0003
+      },
+      {
+        "threshold": 0.9,
+        "recall": 0.147,
+        "false_positive_rate": 0.0
+      }
+    ],
+    "malicious_verdicts": {
+      "MALICIOUS": 8460,
+      "SUSPICIOUS": 1511,
+      "CLEAN": 3116
+    }
+  },
+  "retrained": {
+    "folds": 5,
+    "n": 22180,
+    "recall": {
+      "mean": 0.9629,
+      "std": 0.0047
+    },
+    "false_positive_rate": {
+      "mean": 0.0019,
+      "std": 0.0011
+    },
+    "precision": {
+      "mean": 0.9986,
+      "std": 0.0008
+    },
+    "feature_importance": {
+      "file_size_kb": 0.2124,
+      "javascript_count": 0.175,
+      "open_action": 0.1409,
+      "object_count": 0.0993,
+      "js_max_string_len": 0.091,
+      "js_length": 0.0767,
+      "page_count": 0.0496,
+      "js_entropy": 0.038,
+      "xfa": 0.0255,
+      "embedded_file_count": 0.0221,
+      "js_suspicious_calls": 0.0196,
+      "acroform": 0.0179,
+      "uri_count": 0.0124,
+      "js_network_calls": 0.0102,
+      "additional_actions": 0.0048,
+      "js_encoded_ratio": 0.0023,
+      "launch_action": 0.002,
+      "encrypted": 0.0002
+    }
+  }
+}
